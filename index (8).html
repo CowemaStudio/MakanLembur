@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Makan Lembur CSA</title>
+<meta name="theme-color" content="#2f2a24">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f2ec; --card:#ffffff; --ink:#2f2a24; --muted:#7a7166; --line:#e3ddd2;
+    --accent:#8a6a3f; --accent-soft:#f1e8da; --danger:#b4473a; --ok:#3f7a52;
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-bottom:90px}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    padding-bottom:120px}
+  header{background:var(--ink);color:#f5f2ec;padding:18px 16px 16px}
+  header .brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  header h1{margin:4px 0 0;font-size:20px;font-weight:600}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=date],input[type=number]{width:100%;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:480px){.grid2{grid-template-columns:1fr}}
+  .menus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  @media(max-width:480px){.menus{grid-template-columns:1fr}}
+  .menu-btn{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px;text-align:left;
+    cursor:pointer;font:inherit;color:var(--ink)}
+  .menu-btn b{display:block;font-size:15px}
+  .menu-btn span{font-size:12px;color:var(--muted)}
+  .menu-btn.on{border-color:var(--accent);background:var(--accent-soft)}
+  .row{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fcfbf8}
+  .row-head{display:flex;gap:8px;align-items:center}
+  .row-head .no{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .row-head input{flex:1}
+  .del{border:none;background:none;color:var(--danger);font-size:22px;cursor:pointer;padding:4px 6px;line-height:1}
+  .grp{margin-top:10px}
+  .grp .lbl{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font:inherit;
+    font-size:14px;cursor:pointer;color:var(--ink)}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .row-foot{display:flex;gap:10px;align-items:flex-end;margin-top:10px}
+  .row-foot .note{flex:1}
+  .row-foot .note input{padding:9px 10px;font-size:14px}
+  .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .qty button{width:38px;height:38px;border:none;background:var(--accent-soft);font-size:18px;cursor:pointer;color:var(--ink)}
+  .qty span{min-width:34px;text-align:center;font-weight:600}
+  .add{width:100%;padding:12px;border:1.5px dashed var(--accent);background:transparent;color:var(--accent);
+    border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:10px 0}
+  .rekap-total{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);
+    padding-bottom:10px;margin-bottom:10px}
+  .rekap-total b{font-size:26px}
+  .rk-grp{margin-bottom:10px}
+  .rk-grp .t{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--accent-soft);border-radius:8px;padding:5px 10px;font-size:14px}
+  .chip b{margin-left:4px}
+  .combo{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .combo:last-child{border-bottom:none}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));backdrop-filter:blur(8px)}
+  .bar-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}
+  .bar button{padding:12px 8px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;border:1.5px solid var(--ink)}
+  .b-sec{background:#fff;color:var(--ink)}
+  .b-pri{background:var(--ink);color:#fff}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  .reset{background:none;border:none;color:var(--muted);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Cowema Studio Arsitektur</div>
+  <h1>Pesanan Makan Malam Lembur</h1>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Info Pesanan</h2>
+    <div class="grid2">
+      <div><label for="tgl">Tanggal</label><input type="date" id="tgl"></div>
+      <div><label for="pemesan">Diisi oleh</label><input type="text" id="pemesan" placeholder="Nama yang mengisi"></div>
+    </div>
+    <label for="ket">Keterangan lembur (opsional)</label>
+    <input type="text" id="ket" placeholder="mis. Deadline DED Mozart PIK">
+  </section>
+
+  <section class="card">
+    <h2>Menu Hari Ini <span style="text-transform:none;letter-spacing:0">— satu menu per pemesanan</span></h2>
+    <div class="menus" id="menus"></div>
+    <div class="grid2" style="margin-top:6px">
+      <div><label for="harga">Harga per porsi (opsional)</label><input type="number" id="harga" inputmode="numeric" placeholder="Rp"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Daftar Pesanan</h2>
+    <div id="rows"></div>
+    <button class="add" id="addRow">+ Tambah orang</button>
+  </section>
+
+  <section class="card">
+    <h2>Rekap</h2>
+    <div id="rekap"></div>
+  </section>
+
+  <div style="text-align:center"><button class="reset" id="resetAll">Kosongkan form</button></div>
+</main>
+
+<div class="bar"><div class="bar-in">
+  <button class="b-sec" id="btnCopy">Salin Teks</button>
+  <button class="b-sec" id="btnDl">Unduh PDF</button>
+  <button class="b-pri" id="btnShare">Kirim PDF</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== KONFIGURASI MENU — tambah/ubah pilihan di sini ====== */
+const MENUS = {
+  nasgor: { label:'Nasi Goreng Rono', sub:'Pilih level pedas',
+    groups:[ {key:'pedas', label:'Level pedas', choices:['Normal','Sedang','Pedas']} ] },
+  pecel: { label:'Pecel Lele', sub:'Lauk, pendamping, nasi',
+    groups:[
+      {key:'lauk', label:'Lauk', choices:['Ayam','Lele']},
+      {key:'pendamping', label:'Pendamping', choices:['Tahu','Tempe']},
+      {key:'nasi', label:'Nasi', choices:['Nasi Uduk','Nasi Biasa']}
+    ] },
+  sate: { label:'Sate Ayam Patra', sub:'Porsi & catatan',
+    groups:[] }
+};
+const KOP = {
+  name:'COWEMA STUDIO ARSITEKTUR',
+  lines:['Kebun Jeruk, Jakarta Barat, ID','www.cowemastudio.co.id','project@cowemastudio.co.id','021-5632865']
+};
+
+/* ====== STATE ====== */
+const KEY = 'csa-makan-lembur-v1';
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+let S = { tgl: today(), pemesan:'', ket:'', menu:null, harga:'', rows:[] };
+try { const raw = localStorage.getItem(KEY); if(raw){ const s=JSON.parse(raw); S = Object.assign(S, s); } } catch(e){}
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rupiah = n => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+const tglIndo = iso => { if(!iso) return '-'; const d=new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); };
+
+function defaultOpts(menuKey){
+  const o={}; (MENUS[menuKey]?.groups||[]).forEach(g=>o[g.key]=g.choices[0]); return o;
+}
+function newRow(){ return { nama:'', qty:1, note:'', opts: defaultOpts(S.menu) }; }
+function detail(row){
+  const m=MENUS[S.menu]; if(!m || !m.groups.length) return m ? m.label : '-';
+  return m.groups.map(g=>row.opts[g.key]).join(' + ');
+}
+
+/* ====== RENDER ====== */
+function renderMenus(){
+  $('menus').innerHTML = Object.entries(MENUS).map(([k,m]) =>
+    `<button class="menu-btn ${S.menu===k?'on':''}" data-menu="${k}"><b>${esc(m.label)}</b><span>${esc(m.sub)}</span></button>`
+  ).join('');
+}
+function renderRows(){
+  const box=$('rows');
+  if(!S.menu){ box.innerHTML='<div class="empty">Pilih menu dulu di atas.</div>'; $('addRow').style.display='none'; return; }
+  $('addRow').style.display='';
+  if(!S.rows.length){ box.innerHTML='<div class="empty">Belum ada pesanan.</div>'; return; }
+  const m=MENUS[S.menu];
+  box.innerHTML = S.rows.map((r,i)=>`
+    <div class="row" data-i="${i}">
+      <div class="row-head">
+        <div class="no">${i+1}</div>
+        <input type="text" data-f="nama" value="${esc(r.nama)}" placeholder="Nama">
+        <button class="del" data-act="del" aria-label="Hapus">×</button>
+      </div>
+      ${m.groups.map(g=>`
+        <div class="grp"><div class="lbl">${esc(g.label)}</div>
+          <div class="seg">${g.choices.map(c=>`<button data-g="${g.key}" data-c="${esc(c)}" class="${r.opts[g.key]===c?'on':''}">${esc(c)}</button>`).join('')}</div>
+        </div>`).join('')}
+      <div class="row-foot">
+        <div class="note"><div class="lbl" style="font-size:12px;color:var(--muted);margin-bottom:4px">Catatan</div>
+          <input type="text" data-f="note" value="${esc(r.note)}" placeholder="mis. tanpa sambal"></div>
+        <div><div class="lbl" style="font-size:12px;color:var(--muted);margin-bottom:4px">Porsi</div>
+          <div class="qty"><button data-act="minus">−</button><span>${r.qty}</span><button data-act="plus">+</button></div></div>
+      </div>
+    </div>`).join('');
+}
+function computeRekap(){
+  const m=MENUS[S.menu]; const rows=S.rows.filter(r=>r.nama.trim()||r.qty);
+  const total=rows.reduce((a,r)=>a+r.qty,0);
+  const groups=(m?.groups||[]).map(g=>({label:g.label, counts:g.choices.map(c=>({c, n:rows.filter(r=>r.opts[g.key]===c).reduce((a,r)=>a+r.qty,0)}))}));
+  const combos={};
+  if(m && m.groups.length>1) rows.forEach(r=>{ const k=detail(r); combos[k]=(combos[k]||0)+r.qty; });
+  return {total, groups, combos};
+}
+function renderRekap(){
+  const box=$('rekap');
+  if(!S.menu){ box.innerHTML='<div class="empty">—</div>'; return; }
+  const {total,groups,combos}=computeRekap();
+  const h=Number(S.harga)||0;
+  let html=`<div class="rekap-total"><div>${esc(MENUS[S.menu].label)}<br><span style="color:var(--muted);font-size:13px">${S.rows.length} orang</span></div>
+    <div style="text-align:right"><b>${total}</b> porsi${h?`<br><span style="color:var(--muted);font-size:13px">${rupiah(h*total)}</span>`:''}</div></div>`;
+  groups.forEach(g=>{
+    html+=`<div class="rk-grp"><div class="t">${esc(g.label)}</div><div class="chips">${g.counts.map(x=>`<span class="chip">${esc(x.c)}<b>${x.n}</b></span>`).join('')}</div></div>`;
+  });
+  const ck=Object.keys(combos);
+  if(ck.length){
+    html+=`<div class="rk-grp"><div class="t">Per kombinasi</div>${ck.map(k=>`<div class="combo"><span>${esc(k)}</span><b>${combos[k]}</b></div>`).join('')}</div>`;
+  }
+  box.innerHTML=html;
+}
+function renderAll(){ renderMenus(); renderRows(); renderRekap(); }
+
+/* ====== EVENTS ====== */
+['tgl','pemesan','ket','harga'].forEach(id=>{
+  $(id).value=S[id]||'';
+  $(id).addEventListener('input',e=>{ S[id]=e.target.value; save(); if(id==='harga') renderRekap(); });
+});
+$('menus').addEventListener('click',e=>{
+  const b=e.target.closest('[data-menu]'); if(!b) return;
+  const k=b.dataset.menu; if(k===S.menu) return;
+  if(S.rows.length && !confirm('Ganti menu? Pilihan pesanan tiap orang akan di-reset (nama & porsi tetap).')) return;
+  S.menu=k; S.rows.forEach(r=>r.opts=defaultOpts(k));
+  if(!S.rows.length) S.rows.push(newRow());
+  save(); renderAll();
+});
+$('addRow').addEventListener('click',()=>{
+  S.rows.push(newRow()); save(); renderRows(); renderRekap();
+  const ins=document.querySelectorAll('#rows input[data-f="nama"]'); ins[ins.length-1]?.focus();
+});
+$('rows').addEventListener('input',e=>{
+  const f=e.target.dataset.f; if(!f) return;
+  const i=+e.target.closest('.row').dataset.i; S.rows[i][f]=e.target.value; save(); renderRekap();
+});
+$('rows').addEventListener('click',e=>{
+  const rowEl=e.target.closest('.row'); if(!rowEl) return; const i=+rowEl.dataset.i; const r=S.rows[i];
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.g){ r.opts[b.dataset.g]=b.dataset.c; }
+  else if(b.dataset.act==='plus'){ r.qty++; }
+  else if(b.dataset.act==='minus'){ r.qty=Math.max(1,r.qty-1); }
+  else if(b.dataset.act==='del'){ if(r.nama && !confirm(`Hapus pesanan ${r.nama}?`)) return; S.rows.splice(i,1); }
+  else return;
+  save(); renderRows(); renderRekap();
+});
+$('resetAll').addEventListener('click',()=>{
+  if(!confirm('Kosongkan semua isian?')) return;
+  S={ tgl:today(), pemesan:S.pemesan, ket:'', menu:null, harga:'', rows:[] };
+  ['tgl','pemesan','ket','harga'].forEach(id=>$(id).value=S[id]||'');
+  save(); renderAll();
+});
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200); }
+function validate(){
+  if(!S.menu){ toast('Pilih menu dulu'); return false; }
+  if(!S.rows.length){ toast('Belum ada pesanan'); return false; }
+  const kosong=S.rows.findIndex(r=>!r.nama.trim());
+  if(kosong>-1){ toast(`Nama baris ${kosong+1} masih kosong`); return false; }
+  return true;
+}
+
+/* ====== TEKS (untuk WA ke penjual) ====== */
+function buildText(){
+  const m=MENUS[S.menu]; const {total,groups,combos}=computeRekap();
+  let t=`*Pesanan Makan Lembur — Cowema Studio*\n${tglIndo(S.tgl)}\nMenu: *${m.label}* — ${total} porsi\n\n`;
+  S.rows.forEach((r,i)=>{ t+=`${i+1}. ${r.nama} — ${m.groups.length?detail(r):m.label} (${r.qty})${r.note?` — ${r.note}`:''}\n`; });
+  if(groups.length){ t+='\nRekap:\n'; groups.forEach(g=>{ t+=`• ${g.label}: ${g.counts.filter(x=>x.n).map(x=>`${x.c} ${x.n}`).join(', ')}\n`; }); }
+  const ck=Object.keys(combos); if(ck.length){ ck.forEach(k=>t+=`  - ${k}: ${combos[k]}\n`); }
+  if(S.pemesan) t+=`\nDiisi oleh: ${S.pemesan}`;
+  return t;
+}
+$('btnCopy').addEventListener('click',async()=>{
+  if(!validate()) return;
+  const t=buildText();
+  try{ await navigator.clipboard.writeText(t); toast('Teks pesanan disalin'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Teks pesanan disalin'); }catch(_){ toast('Gagal menyalin'); } ta.remove(); }
+});
+
+/* ====== PDF ====== */
+function buildPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=15;
+  const m=MENUS[S.menu]; const {total,groups,combos}=computeRekap(); const h=Number(S.harga)||0;
+  const INK=[47,42,36], MUTED=[122,113,102], SOFT=[241,232,218];
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...INK);
+  doc.text('PESANAN MAKAN MALAM LEMBUR', M, 22);
+  doc.setDrawColor(...INK); doc.setLineWidth(0.6); doc.line(M,25,W-M,25);
+
+  const info=[['Tanggal', tglIndo(S.tgl)],['Menu', m.label],['Total', `${total} porsi · ${S.rows.length} orang`+(h?` · ${rupiah(h*total)}`:'')],
+    ['Diisi oleh', S.pemesan||'-']];
+  if(S.ket) info.push(['Keterangan', S.ket]);
+  doc.autoTable({ startY:29, body:info, theme:'plain', margin:{left:M,right:M},
+    styles:{fontSize:10, cellPadding:{top:1.2,bottom:1.2,left:0,right:2}, textColor:INK},
+    columnStyles:{0:{cellWidth:30, textColor:MUTED}, 1:{fontStyle:'bold'}} });
+
+  const head=[['No','Nama','Pesanan','Porsi','Catatan']];
+  const body=S.rows.map((r,i)=>[i+1, r.nama, m.groups.length?detail(r):m.label, r.qty, r.note||'']);
+  doc.autoTable({ startY:doc.lastAutoTable.finalY+5, head, body, margin:{left:M,right:M,bottom:32},
+    styles:{fontSize:10, cellPadding:2.4, textColor:INK, lineColor:[227,221,210], lineWidth:0.2},
+    headStyles:{fillColor:INK, textColor:255, fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[252,251,248]},
+    columnStyles:{0:{cellWidth:11,halign:'center'},3:{cellWidth:15,halign:'center',fontStyle:'bold'},4:{cellWidth:40}},
+    foot:[[{content:'TOTAL',colSpan:3,styles:{halign:'right'}},{content:String(total),styles:{halign:'center'}},'']],
+    footStyles:{fillColor:SOFT, textColor:INK, fontStyle:'bold'} });
+
+  if(groups.length){
+    const rk=[];
+    groups.forEach(g=>g.counts.forEach((x,j)=>rk.push([j===0?g.label:'', x.c, x.n])));
+    Object.keys(combos).forEach((k,j)=>rk.push([j===0?'Per kombinasi':'', k, combos[k]]));
+    doc.autoTable({ startY:doc.lastAutoTable.finalY+7, head:[['Rekap','Pilihan','Porsi']], body:rk,
+      margin:{left:M,right:M,bottom:32}, tableWidth:120,
+      styles:{fontSize:9.5, cellPadding:2, textColor:INK, lineColor:[227,221,210], lineWidth:0.2},
+      headStyles:{fillColor:SOFT, textColor:INK, fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:35,textColor:MUTED},2:{cellWidth:18,halign:'center',fontStyle:'bold'}} });
+  }
+
+  // Kop di bawah setiap halaman
+  const n=doc.getNumberOfPages();
+  for(let p=1;p<=n;p++){
+    doc.setPage(p);
+    const y=H-22;
+    doc.setDrawColor(...INK); doc.setLineWidth(0.4); doc.line(M,y,W-M,y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...INK);
+    doc.text(KOP.name, M, y+7);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    KOP.lines.forEach((l,k)=>doc.text(l, W-M, y+5+k*3.6, {align:'right'}));
+    doc.text(`Hal. ${p}/${n}`, M, y+12);
+  }
+  const fname=`Makan-Lembur_${S.tgl||today()}_${m.label.replace(/\s+/g,'-')}.pdf`;
+  return {doc, fname};
+}
+$('btnDl').addEventListener('click',()=>{
+  if(!validate()) return;
+  if(!window.jspdf){ toast('Library PDF belum termuat, cek koneksi'); return; }
+  const {doc,fname}=buildPDF(); doc.save(fname);
+});
+$('btnShare').addEventListener('click',async()=>{
+  if(!validate()) return;
+  if(!window.jspdf){ toast('Library PDF belum termuat, cek koneksi'); return; }
+  const {doc,fname}=buildPDF();
+  const file=new File([doc.output('blob')], fname, {type:'application/pdf'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:fname, text:`Pesanan makan lembur ${tglIndo(S.tgl)} — ${MENUS[S.menu].label}`}); }
+    catch(e){ if(e.name!=='AbortError') { doc.save(fname); } }
+  } else { doc.save(fname); toast('PDF diunduh — kirim manual dari folder unduhan'); }
+});
+
+renderAll();
+</script>
+</body>
+</html>
