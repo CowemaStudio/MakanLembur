@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Makan Lembur CSA</title>
+<meta name="theme-color" content="#2f2a24">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f2ec; --card:#ffffff; --ink:#2f2a24; --muted:#7a7166; --line:#e3ddd2;
+    --accent:#8a6a3f; --accent-soft:#f1e8da; --danger:#b4473a; --ok:#4f9a66; --warn:#d19a2e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-bottom:90px}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    padding-bottom:120px}
+  header{background:var(--ink);color:#f5f2ec;padding:18px 16px 14px}
+  header .brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  header h1{margin:4px 0 6px;font-size:20px;font-weight:600}
+  .sync{display:flex;align-items:center;gap:7px;font-size:12px;opacity:.85}
+  .sync i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+  .sync.ok i{background:var(--ok)} .sync.saving i{background:var(--warn)} .sync.err i{background:var(--danger)}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  .banner{background:#fff4dc;border:1px solid #ecd59d;color:#6b5320;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=date],input[type=number]{width:100%;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:480px){.grid2{grid-template-columns:1fr}}
+  .menus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  @media(max-width:480px){.menus{grid-template-columns:1fr}}
+  .menu-btn{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px;text-align:left;
+    cursor:pointer;font:inherit;color:var(--ink)}
+  .menu-btn b{display:block;font-size:15px}
+  .menu-btn span{font-size:12px;color:var(--muted)}
+  .menu-btn.on{border-color:var(--accent);background:var(--accent-soft)}
+  .row{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fcfbf8}
+  .row.unsaved{border-style:dashed}
+  .row-head{display:flex;gap:8px;align-items:center}
+  .row-head .no{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .row-head input{flex:1}
+  .del{border:none;background:none;color:var(--danger);font-size:22px;cursor:pointer;padding:4px 6px;line-height:1}
+  .grp{margin-top:10px}
+  .lbl{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font:inherit;
+    font-size:14px;cursor:pointer;color:var(--ink)}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .row-foot{display:flex;gap:10px;align-items:flex-end;margin-top:10px}
+  .row-foot .note{flex:1}
+  .row-foot .note input{padding:9px 10px;font-size:14px}
+  .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .qty button{width:38px;height:38px;border:none;background:var(--accent-soft);font-size:18px;cursor:pointer;color:var(--ink)}
+  .qty span{min-width:34px;text-align:center;font-weight:600}
+  .add{width:100%;padding:12px;border:1.5px dashed var(--accent);background:transparent;color:var(--accent);
+    border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:10px 0}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  .rekap-total{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);
+    padding-bottom:10px;margin-bottom:10px}
+  .rekap-total b{font-size:26px}
+  .rk-grp{margin-bottom:10px}
+  .rk-grp .t{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--accent-soft);border-radius:8px;padding:5px 10px;font-size:14px}
+  .chip b{margin-left:4px}
+  .combo{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .combo:last-child{border-bottom:none}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));backdrop-filter:blur(8px)}
+  .bar-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}
+  .bar button{padding:12px 8px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;border:1.5px solid var(--ink)}
+  .b-sec{background:#fff;color:var(--ink)}
+  .b-pri{background:var(--ink);color:#fff}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Cowema Studio Arsitektur</div>
+  <h1>Pesanan Makan Malam Lembur</h1>
+  <div class="sync" id="sync"><i></i><span>Memuat…</span></div>
+</header>
+
+<main>
+  <div class="banner" id="banner" hidden>
+    <b>Mode lokal.</b> Form belum tersambung ke Google Sheet, jadi isian hanya tersimpan di perangkat ini.
+  </div>
+
+  <section class="card">
+    <h2>Info Pesanan</h2>
+    <div class="grid2">
+      <div><label for="tgl">Tanggal</label><input type="date" id="tgl"></div>
+      <div><label for="pemesan">Koordinator (yang pesan ke penjual)</label><input type="text" id="pemesan" placeholder="Nama koordinator"></div>
+    </div>
+    <label for="ket">Keterangan lembur (opsional)</label>
+    <input type="text" id="ket" placeholder="mis. Deadline DED Mozart PIK">
+  </section>
+
+  <section class="card">
+    <h2>Menu Hari Ini <span style="text-transform:none;letter-spacing:0">— satu menu untuk semua</span></h2>
+    <div class="menus" id="menus"></div>
+    <div class="grid2" style="margin-top:6px">
+      <div><label for="harga">Harga per porsi (opsional)</label><input type="number" id="harga" inputmode="numeric" placeholder="Rp"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Daftar Pesanan</h2>
+    <div id="rows"></div>
+    <button class="add" id="addRow">+ Tambah pesanan</button>
+    <div class="hint" id="rowHint"></div>
+  </section>
+
+  <section class="card">
+    <h2>Rekap</h2>
+    <div id="rekap"></div>
+  </section>
+</main>
+
+<div class="bar"><div class="bar-in">
+  <button class="b-sec" id="btnCopy">Salin Teks</button>
+  <button class="b-sec" id="btnDl">Unduh PDF</button>
+  <button class="b-pri" id="btnShare">Kirim PDF</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   1) TEMPEL URL WEB APP GOOGLE APPS SCRIPT DI SINI (berakhiran /exec)
+   Kosong = mode lokal (data hanya di perangkat ini).
+   ================================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyOEYR9KW72PAI5gU1SAPI7LaWr1vbnusZntjgJgbZVFlmC8lKyE0DESnA-3wCme0uG/exec';
+
+/* 2) KONFIGURASI MENU — tambah/ubah pilihan di sini */
+const MENUS = {
+  nasgor: { label:'Nasi Goreng Rono', sub:'Pilih level pedas',
+    groups:[ {key:'pedas', label:'Level pedas', choices:['Normal','Sedang','Pedas']} ] },
+  pecel: { label:'Pecel Lele', sub:'Lauk, pendamping, nasi',
+    groups:[
+      {key:'lauk', label:'Lauk', choices:['Ayam','Lele']},
+      {key:'pendamping', label:'Pendamping', choices:['Tahu','Tempe']},
+      {key:'nasi', label:'Nasi', choices:['Nasi Uduk','Nasi Biasa']}
+    ] },
+  sate: { label:'Sate Ayam Patra', sub:'Porsi & catatan', groups:[] }
+};
+const KOP = {
+  name:'COWEMA STUDIO ARSITEKTUR',
+  lines:['Kebun Jeruk, Jakarta Barat, ID','www.cowemastudio.co.id','project@cowemastudio.co.id','021-5632865']
+};
+const POLL_MS = 5000;
+
+/* ================= Penyimpanan: Google Sheet atau lokal ================= */
+const DBKEY = 'csa-makan-lembur-db-v2';
+const LocalApi = {
+  remote:false,
+  _db(){ try{ return JSON.parse(localStorage.getItem(DBKEY)) || {sessions:{},rows:[]}; }catch(e){ return {sessions:{},rows:[]}; } },
+  _save(db){ try{ localStorage.setItem(DBKEY, JSON.stringify(db)); }catch(e){} },
+  _state(db,d){ return { ok:true, session: db.sessions[d] || null,
+    rows: db.rows.filter(r=>r.date===d).map(r=>({id:r.id,nama:r.nama,opts:r.opts,qty:r.qty,note:r.note})) }; },
+  async get(d){ return this._state(this._db(), d); },
+  async post(b){
+    const db=this._db(), d=b.date;
+    if(b.action==='session'){
+      db.sessions[d]=Object.assign({menu:null,harga:'',ket:'',pemesan:''}, db.sessions[d]||{}, b.session);
+      if(b.resetOpts) db.rows.forEach(r=>{ if(r.date===d) r.opts={...b.resetOpts}; });
+    } else if(b.action==='upsert'){
+      const row={id:b.row.id,nama:b.row.nama,opts:b.row.opts,qty:b.row.qty,note:b.row.note,date:d};
+      const i=db.rows.findIndex(r=>r.id===row.id); if(i>-1) db.rows[i]=row; else db.rows.push(row);
+    } else if(b.action==='delete'){
+      db.rows=db.rows.filter(r=>r.id!==b.id);
+    }
+    this._save(db); return this._state(db,d);
+  }
+};
+const RemoteApi = {
+  remote:true,
+  async get(d){
+    const r=await fetch(API_URL+'?action=get&date='+encodeURIComponent(d)+'&_='+Date.now(), {cache:'no-store'});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Gagal'); return j;
+  },
+  async post(b){
+    const r=await fetch(API_URL, {method:'POST', body:JSON.stringify(b)}); // text/plain → tanpa preflight
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Gagal'); return j;
+  }
+};
+const Api = API_URL ? RemoteApi : LocalApi;
+
+/* ================= State ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rupiah = n => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const tglIndo = iso => { if(!iso) return '-'; const d=new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); };
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+let curDate = today();
+let srv = { session:null, rows:[] };   // data terakhir dari server
+let loaded = false;
+const pend = new Map();               // id -> {row, seq, timer, busy}  (perubahan lokal belum tersimpan)
+const delSet = new Set();             // id yang sedang dihapus
+let sessPend = null;                  // {fields, reset, seq, timer}
+let reqSeq = 0, lastApplied = 0, lastPostApplied = 0, posting = 0, syncErr = false;
+
+function session(){
+  return Object.assign({menu:null,harga:'',ket:'',pemesan:''}, srv.session||{}, sessPend?sessPend.fields:{});
+}
+function defaultOpts(menuKey){ const o={}; (MENUS[menuKey]?.groups||[]).forEach(g=>o[g.key]=g.choices[0]); return o; }
+function rows(){
+  const reset = sessPend && sessPend.reset;
+  const out = srv.rows.filter(r=>!delSet.has(r.id)).map(r=>{
+    if(pend.has(r.id)) return pend.get(r.id).row;
+    return reset ? {...r, opts:{...reset}} : r;
+  });
+  for(const [id,p] of pend) if(!delSet.has(id) && !srv.rows.some(r=>r.id===id)) out.push(p.row);
+  return out;
+}
+function detail(row, menuKey=session().menu){
+  const m=MENUS[menuKey]; if(!m) return '-';
+  if(!m.groups.length) return m.label;
+  return m.groups.map(g=>row.opts?.[g.key] ?? g.choices[0]).join(' + ');
+}
+
+/* ================= Sinkronisasi ================= */
+function apply(res, id, isPost){
+  if(isPost){ if(id < lastPostApplied) return; lastPostApplied=id; lastApplied=reqSeq; }
+  else { if(id <= lastApplied) return; lastApplied=id; }
+  srv = { session:res.session||null, rows:res.rows||[] };
+  loaded = true; syncErr = false;
+  renderAll();
+}
+async function poll(){
+  if(document.hidden || posting) return;
+  const id=++reqSeq, d=curDate;
+  try{ const res=await Api.get(d); if(d===curDate) apply(res,id,false); }
+  catch(e){ syncErr=true; renderStatus(); }
+}
+async function post(body){
+  const id=++reqSeq, d=curDate; posting++; renderStatus();
+  try{ const res=await Api.post(body); if(d===curDate) apply(res,id,true); return res; }
+  catch(e){ syncErr=true; throw e; }
+  finally{ posting--; renderStatus(); }
+}
+
+function editSession(fields, reset, delay=700){
+  if(!sessPend) sessPend={fields:{},seq:0,timer:null};
+  Object.assign(sessPend.fields, fields);
+  if(reset) sessPend.reset = reset;
+  sessPend.seq++;
+  clearTimeout(sessPend.timer);
+  sessPend.timer=setTimeout(flushSession, delay);
+}
+async function flushSession(){
+  const p=sessPend; if(!p) return;
+  clearTimeout(p.timer); p.timer=null;
+  const seq=p.seq, fields={...p.fields}, reset=p.reset;
+  const m=MENUS[fields.menu||session().menu];
+  const body={action:'session', date:curDate, session:fields};
+  if(reset){ body.resetOpts=reset; body.resetText=detail({opts:reset}, fields.menu); body.menuLabel=m?.label; }
+  try{
+    await post(body);
+    if(sessPend===p && p.seq===seq){ sessPend=null; renderAll(); }
+    else if(sessPend===p && reset && p.reset===reset){ delete p.reset; }
+  }catch(e){ if(sessPend===p) p.timer=setTimeout(flushSession, 4000); }
+}
+
+function editRow(id, patch, {render=true, delay=600}={}){
+  const base = pend.get(id)?.row || rows().find(r=>r.id===id); if(!base) return;
+  const row = {...base, ...patch, opts:{...base.opts, ...(patch.opts||{})}};
+  const p = pend.get(id) || {seq:0,timer:null};
+  p.row=row; p.seq++; clearTimeout(p.timer);
+  p.timer=setTimeout(()=>flushRow(id), delay);
+  pend.set(id,p);
+  if(render) renderRows(); renderRekap(); renderStatus();
+}
+async function flushRow(id){
+  const p=pend.get(id); if(!p) return;
+  clearTimeout(p.timer); p.timer=null;
+  if(!p.row.nama.trim() || !session().menu) return;   // belum lengkap, tunggu
+  if(sessPend) await flushSession();
+  if(p.busy){ p.timer=setTimeout(()=>flushRow(id),500); return; }
+  const seq=p.seq; p.busy=true;
+  const m=MENUS[session().menu];
+  try{
+    await post({action:'upsert', date:curDate, menuLabel:m.label, row:{...p.row, text:detail(p.row)}});
+    p.busy=false;
+    if(pend.get(id)===p && p.seq===seq){ pend.delete(id); renderAll(); }
+  }catch(e){ p.busy=false; if(pend.get(id)===p) p.timer=setTimeout(()=>flushRow(id),4000); }
+}
+async function delRow(id){
+  const onServer = srv.rows.some(r=>r.id===id);
+  const p=pend.get(id); if(p){ clearTimeout(p.timer); pend.delete(id); }
+  if(!onServer){ renderAll(); return; }
+  delSet.add(id); renderAll();
+  try{ await post({action:'delete', date:curDate, id}); }
+  catch(e){ toast('Gagal menghapus, coba lagi'); }
+  finally{ delSet.delete(id); renderAll(); }
+}
+async function flushAll(){
+  if(sessPend) await flushSession();
+  await Promise.all([...pend.keys()].map(flushRow));
+}
+function unsavedCount(){
+  let n = sessPend?1:0;
+  for(const p of pend.values()) if(p.row.nama.trim()) n++;
+  return n;
+}
+
+/* ================= Render ================= */
+function renderStatus(){
+  const el=$('sync'); let cls='', txt='';
+  if(!loaded){ txt='Memuat…'; }
+  else if(posting || unsavedCount()){ cls='saving'; txt='Menyimpan…'; }
+  else if(syncErr){ cls='err'; txt='Gagal tersambung, mencoba lagi…'; }
+  else if(Api.remote){ cls='ok'; txt='Tersinkron · semua perangkat melihat data yang sama'; }
+  else { cls='ok'; txt='Tersimpan di perangkat ini'; }
+  el.className='sync '+cls; el.querySelector('span').textContent=txt;
+}
+function renderMenus(){
+  const cur=session().menu;
+  $('menus').innerHTML = Object.entries(MENUS).map(([k,m]) =>
+    `<button class="menu-btn ${cur===k?'on':''}" data-menu="${k}"><b>${esc(m.label)}</b><span>${esc(m.sub)}</span></button>`
+  ).join('');
+}
+function renderSessionInputs(){
+  const s=session();
+  $('tgl').value=curDate;
+  for(const k of ['pemesan','ket','harga']){ const el=$(k); if(document.activeElement!==el) el.value=s[k]??''; }
+}
+function rowHTML(r,i,m){
+  return `
+    <div class="row ${pend.has(r.id)?'unsaved':''}" data-id="${esc(r.id)}">
+      <div class="row-head">
+        <div class="no">${i+1}</div>
+        <input type="text" data-f="nama" value="${esc(r.nama)}" placeholder="Nama" autocomplete="off">
+        <button class="del" data-act="del" aria-label="Hapus">×</button>
+      </div>
+      ${m.groups.map(g=>`
+        <div class="grp"><div class="lbl">${esc(g.label)}</div>
+          <div class="seg">${g.choices.map(c=>`<button data-g="${g.key}" data-c="${esc(c)}" class="${(r.opts?.[g.key]??g.choices[0])===c?'on':''}">${esc(c)}</button>`).join('')}</div>
+        </div>`).join('')}
+      <div class="row-foot">
+        <div class="note"><div class="lbl">Catatan</div>
+          <input type="text" data-f="note" value="${esc(r.note)}" placeholder="mis. tanpa sambal" autocomplete="off"></div>
+        <div><div class="lbl">Porsi</div>
+          <div class="qty"><button data-act="minus">−</button><span>${r.qty}</span><button data-act="plus">+</button></div></div>
+      </div>
+    </div>`;
+}
+// Perbarui hanya yang berubah, supaya kolom yang sedang diketik tidak terganggu
+function patchRow(el,r,i){
+  el.classList.toggle('unsaved', pend.has(r.id));
+  el.querySelector('.no').textContent=i+1;
+  el.querySelectorAll('input[data-f]').forEach(inp=>{
+    const v=r[inp.dataset.f]??''; if(inp!==document.activeElement && inp.value!==v) inp.value=v;
+  });
+  el.querySelectorAll('.seg button').forEach(b=>{
+    const g=b.dataset.g, grp=MENUS[session().menu].groups.find(x=>x.key===g);
+    b.classList.toggle('on', (r.opts?.[g]??grp.choices[0])===b.dataset.c);
+  });
+  el.querySelector('.qty span').textContent=r.qty;
+}
+function renderRows(){
+  const box=$('rows'), menu=session().menu, list=rows();
+  $('addRow').style.display = menu ? '' : 'none';
+  $('rowHint').textContent = menu ? 'Pesanan tersimpan otomatis setelah nama diisi. Siapa pun bisa menambah atau mengubah pesanan.' : '';
+  if(!menu){ box.dataset.menu=''; box.innerHTML='<div class="empty">Pilih menu hari ini dulu di atas.</div>'; return; }
+  if(!list.length){ box.dataset.menu=''; box.innerHTML='<div class="empty">Belum ada pesanan. Tambahkan pesananmu.</div>'; return; }
+  const m=MENUS[menu];
+  if(box.dataset.menu!==menu){ box.innerHTML=''; box.dataset.menu=menu; }
+  box.querySelectorAll(':scope > .empty').forEach(e=>e.remove());
+  const existing=new Map([...box.querySelectorAll(':scope > .row')].map(el=>[el.dataset.id,el]));
+  let prev=null;
+  list.forEach((r,i)=>{
+    let el=existing.get(r.id);
+    if(el){ existing.delete(r.id); patchRow(el,r,i); }
+    else { const t=document.createElement('template'); t.innerHTML=rowHTML(r,i,m).trim(); el=t.content.firstElementChild; }
+    const ref = prev ? prev.nextElementSibling : box.firstElementChild;
+    if(el!==ref) box.insertBefore(el, ref);
+    prev=el;
+  });
+  existing.forEach(el=>el.remove());
+}
+function computeRekap(){
+  const menu=session().menu, m=MENUS[menu], list=rows().filter(r=>r.nama.trim());
+  const total=list.reduce((a,r)=>a+(+r.qty||0),0);
+  const groups=(m?.groups||[]).map(g=>({label:g.label,
+    counts:g.choices.map(c=>({c, n:list.filter(r=>(r.opts?.[g.key]??g.choices[0])===c).reduce((a,r)=>a+(+r.qty||0),0)}))}));
+  const combos={};
+  if(m && m.groups.length>1) list.forEach(r=>{ const k=detail(r); combos[k]=(combos[k]||0)+(+r.qty||0); });
+  return {total, groups, combos, list};
+}
+function renderRekap(){
+  const box=$('rekap'), s=session();
+  if(!s.menu){ box.innerHTML='<div class="empty">—</div>'; return; }
+  const {total,groups,combos,list}=computeRekap(); const h=Number(s.harga)||0;
+  let html=`<div class="rekap-total"><div>${esc(MENUS[s.menu].label)}<br><span style="color:var(--muted);font-size:13px">${list.length} orang</span></div>
+    <div style="text-align:right"><b>${total}</b> porsi${h?`<br><span style="color:var(--muted);font-size:13px">${rupiah(h*total)}</span>`:''}</div></div>`;
+  groups.forEach(g=>{ html+=`<div class="rk-grp"><div class="t">${esc(g.label)}</div><div class="chips">${g.counts.map(x=>`<span class="chip">${esc(x.c)}<b>${x.n}</b></span>`).join('')}</div></div>`; });
+  const ck=Object.keys(combos);
+  if(ck.length) html+=`<div class="rk-grp"><div class="t">Per kombinasi</div>${ck.map(k=>`<div class="combo"><span>${esc(k)}</span><b>${combos[k]}</b></div>`).join('')}</div>`;
+  box.innerHTML=html;
+}
+function renderAll(){ renderMenus(); renderSessionInputs(); renderRows(); renderRekap(); renderStatus(); }
+
+/* ================= Event ================= */
+$('tgl').addEventListener('change', async e=>{
+  const v=e.target.value; if(!v || v===curDate) return;
+  await flushAll().catch(()=>{});
+  curDate=v; srv={session:null,rows:[]}; pend.clear(); delSet.clear(); sessPend=null; loaded=false;
+  lastApplied=reqSeq; renderAll(); poll();
+});
+for(const k of ['pemesan','ket','harga']){
+  $(k).addEventListener('input', e=>{ editSession({[k]:e.target.value}); renderRekap(); renderStatus(); });
+}
+$('menus').addEventListener('click', e=>{
+  const b=e.target.closest('[data-menu]'); if(!b) return;
+  const k=b.dataset.menu, cur=session().menu; if(k===cur) return;
+  const n=rows().length;
+  if(cur && n && !confirm(`Ganti menu hari ini ke ${MENUS[k].label}?\nPilihan ${n} pesanan yang sudah masuk akan di-reset (nama & porsi tetap).`)) return;
+  const reset=defaultOpts(k);
+  for(const p of pend.values()) p.row.opts={...reset};
+  editSession({menu:k}, cur && n ? reset : null, 0);
+  if(!n){ const id=uid(); pend.set(id,{row:{id,nama:'',qty:1,note:'',opts:reset},seq:1,timer:null}); }
+  renderAll();
+});
+$('addRow').addEventListener('click',()=>{
+  const id=uid();
+  pend.set(id,{row:{id,nama:'',qty:1,note:'',opts:defaultOpts(session().menu)},seq:1,timer:null});
+  renderRows(); renderRekap();
+  $('rows').querySelector(`.row[data-id="${id}"] input[data-f="nama"]`)?.focus();
+});
+$('rows').addEventListener('input', e=>{
+  const f=e.target.dataset.f; if(!f) return;
+  const id=e.target.closest('.row').dataset.id;
+  editRow(id, {[f]:e.target.value}, {render:false, delay:900});
+});
+$('rows').addEventListener('click', e=>{
+  const rowEl=e.target.closest('.row'); const b=e.target.closest('button'); if(!rowEl||!b) return;
+  const id=rowEl.dataset.id, r=rows().find(x=>x.id===id); if(!r) return;
+  if(b.dataset.g) editRow(id, {opts:{[b.dataset.g]:b.dataset.c}});
+  else if(b.dataset.act==='plus') editRow(id, {qty:(+r.qty||1)+1});
+  else if(b.dataset.act==='minus') editRow(id, {qty:Math.max(1,(+r.qty||1)-1)});
+  else if(b.dataset.act==='del'){ if(r.nama && !confirm(`Hapus pesanan ${r.nama}?`)) return; delRow(id); }
+});
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushAll().catch(()=>{}); else poll(); });
+window.addEventListener('pagehide', ()=>{ flushAll().catch(()=>{}); });
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400); }
+async function ready(){
+  const s=session();
+  if(!s.menu){ toast('Pilih menu dulu'); return false; }
+  const list=rows();
+  if(!list.some(r=>r.nama.trim())){ toast('Belum ada pesanan'); return false; }
+  // baris tanpa nama diabaikan di PDF/teks
+  try{ await flushAll(); await poll(); }catch(e){}
+  if(unsavedCount() && Api.remote && !confirm('Sebagian pesanan belum tersimpan ke server (koneksi bermasalah). Tetap buat PDF dari data di layar ini?')) return false;
+  return true;
+}
+
+/* ================= Teks WA ================= */
+function buildText(){
+  const s=session(), m=MENUS[s.menu]; const {total,groups,combos,list}=computeRekap();
+  let t=`*Pesanan Makan Lembur — Cowema Studio*\n${tglIndo(curDate)}\nMenu: *${m.label}* — ${total} porsi\n\n`;
+  list.forEach((r,i)=>{ t+=`${i+1}. ${r.nama} — ${detail(r)} (${r.qty})${r.note?` — ${r.note}`:''}\n`; });
+  if(groups.length){ t+='\nRekap:\n'; groups.forEach(g=>{ t+=`• ${g.label}: ${g.counts.filter(x=>x.n).map(x=>`${x.c} ${x.n}`).join(', ')}\n`; }); }
+  Object.keys(combos).forEach(k=>t+=`  - ${k}: ${combos[k]}\n`);
+  if(s.pemesan) t+=`\nKoordinator: ${s.pemesan}`;
+  return t;
+}
+$('btnCopy').addEventListener('click',async()=>{
+  if(!await ready()) return;
+  const t=buildText();
+  try{ await navigator.clipboard.writeText(t); toast('Teks pesanan disalin'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Teks pesanan disalin'); }catch(_){ toast('Gagal menyalin'); } ta.remove(); }
+});
+
+/* ================= PDF ================= */
+function buildPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=15;
+  const s=session(), m=MENUS[s.menu]; const {total,groups,combos,list}=computeRekap(); const h=Number(s.harga)||0;
+  const INK=[47,42,36], MUTED=[122,113,102], SOFT=[241,232,218];
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...INK);
+  doc.text('PESANAN MAKAN MALAM LEMBUR', M, 22);
+  doc.setDrawColor(...INK); doc.setLineWidth(0.6); doc.line(M,25,W-M,25);
+
+  const info=[['Tanggal', tglIndo(curDate)],['Menu', m.label],
+    ['Total', `${total} porsi · ${list.length} orang`+(h?` · ${rupiah(h*total)}`:'')],
+    ['Koordinator', s.pemesan||'-']];
+  if(s.ket) info.push(['Keterangan', s.ket]);
+  doc.autoTable({ startY:29, body:info, theme:'plain', margin:{left:M,right:M},
+    styles:{fontSize:10, cellPadding:{top:1.2,bottom:1.2,left:0,right:2}, textColor:INK},
+    columnStyles:{0:{cellWidth:30, textColor:MUTED}, 1:{fontStyle:'bold'}} });
+
+  doc.autoTable({ startY:doc.lastAutoTable.finalY+5,
+    head:[['No','Nama','Pesanan','Porsi','Catatan']],
+    body:list.map((r,i)=>[i+1, r.nama, detail(r), r.qty, r.note||'']),
+    margin:{left:M,right:M,bottom:32},
+    styles:{fontSize:10, cellPadding:2.4, textColor:INK, lineColor:[227,221,210], lineWidth:0.2},
+    headStyles:{fillColor:INK, textColor:255, fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[252,251,248]},
+    columnStyles:{0:{cellWidth:11,halign:'center'},3:{cellWidth:15,halign:'center',fontStyle:'bold'},4:{cellWidth:40}},
+    foot:[[{content:'TOTAL',colSpan:3,styles:{halign:'right'}},{content:String(total),styles:{halign:'center'}},'']],
+    footStyles:{fillColor:SOFT, textColor:INK, fontStyle:'bold'} });
+
+  if(groups.length){
+    const rk=[];
+    groups.forEach(g=>g.counts.forEach((x,j)=>rk.push([j===0?g.label:'', x.c, x.n])));
+    Object.keys(combos).forEach((k,j)=>rk.push([j===0?'Per kombinasi':'', k, combos[k]]));
+    doc.autoTable({ startY:doc.lastAutoTable.finalY+7, head:[['Rekap','Pilihan','Porsi']], body:rk,
+      margin:{left:M,right:M,bottom:32}, tableWidth:120,
+      styles:{fontSize:9.5, cellPadding:2, textColor:INK, lineColor:[227,221,210], lineWidth:0.2},
+      headStyles:{fillColor:SOFT, textColor:INK, fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:35,textColor:MUTED},2:{cellWidth:18,halign:'center',fontStyle:'bold'}} });
+  }
+
+  const n=doc.getNumberOfPages();
+  for(let p=1;p<=n;p++){
+    doc.setPage(p);
+    const y=H-22;
+    doc.setDrawColor(...INK); doc.setLineWidth(0.4); doc.line(M,y,W-M,y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...INK);
+    doc.text(KOP.name, M, y+7);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    KOP.lines.forEach((l,k)=>doc.text(l, W-M, y+5+k*3.6, {align:'right'}));
+    doc.text(`Hal. ${p}/${n}`, M, y+12);
+  }
+  return {doc, fname:`Makan-Lembur_${curDate}_${m.label.replace(/\s+/g,'-')}.pdf`};
+}
+$('btnDl').addEventListener('click',async()=>{
+  if(!window.jspdf){ toast('Library PDF belum termuat, cek koneksi'); return; }
+  if(!await ready()) return;
+  const {doc,fname}=buildPDF(); doc.save(fname);
+});
+$('btnShare').addEventListener('click',async()=>{
+  if(!window.jspdf){ toast('Library PDF belum termuat, cek koneksi'); return; }
+  if(!await ready()) return;
+  const {doc,fname}=buildPDF();
+  const file=new File([doc.output('blob')], fname, {type:'application/pdf'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:fname, text:`Pesanan makan lembur ${tglIndo(curDate)} — ${MENUS[session().menu].label}`}); }
+    catch(e){ if(e.name!=='AbortError') doc.save(fname); }
+  } else { doc.save(fname); toast('PDF diunduh — kirim manual dari folder unduhan'); }
+});
+
+/* ================= Mulai ================= */
+$('banner').hidden = Api.remote;
+renderAll();
+poll();
+setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>
